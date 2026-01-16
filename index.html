@@ -1,0 +1,1601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NHS England - ICBs, Trusts & Hospitals Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            overflow-y: auto;
+            max-height: 100vh;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: #005eb8;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .logo h1 {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 15px 12px 40px;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .search-box input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .search-box::before {
+            content: "🔍";
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+        }
+
+        .filter-section {
+            margin-bottom: 25px;
+        }
+
+        .filter-section h3 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 12px;
+        }
+
+        .region-filters {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .region-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            font-size: 13px;
+        }
+
+        .region-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateX(5px);
+        }
+
+        .region-btn.active {
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+        }
+
+        .region-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .region-count {
+            margin-left: auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 25px;
+            overflow-y: auto;
+            max-height: 100vh;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .breadcrumb span {
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .breadcrumb span:hover {
+            color: #fff;
+        }
+
+        .breadcrumb .separator {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .breadcrumb .current {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-card h4 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 8px;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .stat-card .change {
+            font-size: 0.85rem;
+            color: #4ade80;
+            margin-top: 5px;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 25px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-header h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .view-toggle button {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .view-toggle button.active {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        /* List View */
+        .list-container {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+
+        .list-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+
+        .list-item .icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 18px;
+        }
+
+        .list-item .details {
+            flex: 1;
+        }
+
+        .list-item .name {
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        .list-item .meta {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .list-item .count-badge {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .list-item .arrow {
+            margin-left: 10px;
+            color: rgba(255, 255, 255, 0.3);
+            transition: transform 0.3s ease;
+        }
+
+        .list-item:hover .arrow {
+            transform: translateX(5px);
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Chart Container */
+        .chart-container {
+            height: 350px;
+            position: relative;
+        }
+
+        /* Detail Panel */
+        .detail-panel {
+            position: fixed;
+            top: 0;
+            right: -500px;
+            width: 500px;
+            height: 100vh;
+            background: rgba(22, 33, 62, 0.98);
+            backdrop-filter: blur(20px);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            transition: right 0.4s ease;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .detail-panel.open {
+            right: 0;
+        }
+
+        .detail-panel .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            color: #fff;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background 0.3s ease;
+        }
+
+        .detail-panel .close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .detail-header {
+            margin-bottom: 25px;
+            padding-right: 40px;
+        }
+
+        .detail-header .type-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .detail-header h2 {
+            font-size: 1.4rem;
+            margin-bottom: 5px;
+        }
+
+        .detail-header .subtitle {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 14px;
+        }
+
+        .detail-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .detail-stat {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .detail-stat label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.5);
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .detail-stat .value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .detail-section {
+            margin-bottom: 25px;
+        }
+
+        .detail-section h3 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .detail-section h3::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .hospital-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .hospital-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .hospital-item .hospital-icon {
+            width: 35px;
+            height: 35px;
+            background: rgba(0, 94, 184, 0.3);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .hospital-item .hospital-info h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        .hospital-item .hospital-info p {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .hospital-type-badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+
+        .type-acute { background: rgba(230, 57, 70, 0.3); }
+        .type-community { background: rgba(42, 157, 143, 0.3); }
+        .type-mental { background: rgba(168, 85, 247, 0.3); }
+        .type-specialist { background: rgba(59, 130, 246, 0.3); }
+        .type-ambulance { background: rgba(251, 191, 36, 0.3); }
+
+        /* Overlay */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 999;
+        }
+
+        .overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Back button */
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 13px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                display: none;
+            }
+            .stats-row {
+                grid-template-columns: 1fr;
+            }
+            .detail-panel {
+                width: 100%;
+                right: -100%;
+            }
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .no-results .icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">NHS</div>
+                <h1>England Dashboard</h1>
+            </div>
+
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search ICBs, Trusts, Hospitals...">
+            </div>
+
+            <div class="filter-section">
+                <h3>NHS Regions</h3>
+                <div class="region-filters" id="regionFilters">
+                    <!-- Generated dynamically -->
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <h3>Trust Types</h3>
+                <div class="region-filters" id="trustTypeFilters">
+                    <!-- Generated dynamically -->
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="header">
+                <div class="breadcrumb" id="breadcrumb">
+                    <span class="current">All Regions</span>
+                </div>
+            </div>
+
+            <div class="stats-row" id="statsRow">
+                <!-- Generated dynamically -->
+            </div>
+
+            <div class="content-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 id="listTitle">Integrated Care Boards</h2>
+                        <div class="view-toggle">
+                            <button class="active" data-view="list">List</button>
+                            <button data-view="chart">Chart</button>
+                        </div>
+                    </div>
+                    <div id="listView" class="list-container">
+                        <!-- Generated dynamically -->
+                    </div>
+                    <div id="chartView" class="chart-container" style="display: none;">
+                        <canvas id="mainChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Distribution by Region</h2>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="regionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Detail Panel -->
+    <div class="overlay" id="overlay"></div>
+    <div class="detail-panel" id="detailPanel">
+        <button class="close-btn" id="closePanel">&times;</button>
+        <div id="detailContent">
+            <!-- Generated dynamically -->
+        </div>
+    </div>
+
+    <script>
+        // NHS Data with hospitals
+        const NHS_DATA = {
+            regions: {
+                "London": { color: "#E63946", icbs: ["NHS North Central London ICB", "NHS North East London ICB", "NHS North West London ICB", "NHS South East London ICB", "NHS South West London ICB"] },
+                "South East": { color: "#F4A261", icbs: ["NHS Buckinghamshire, Oxfordshire and Berkshire West ICB", "NHS Frimley ICB", "NHS Hampshire and Isle of Wight ICB", "NHS Kent and Medway ICB", "NHS Surrey Heartlands ICB", "NHS Sussex ICB"] },
+                "Midlands": { color: "#2A9D8F", icbs: ["NHS Birmingham and Solihull ICB", "NHS Black Country ICB", "NHS Coventry and Warwickshire ICB", "NHS Derby and Derbyshire ICB", "NHS Herefordshire and Worcestershire ICB", "NHS Leicester, Leicestershire and Rutland ICB", "NHS Lincolnshire ICB", "NHS Northamptonshire ICB", "NHS Nottingham and Nottinghamshire ICB", "NHS Shropshire, Telford and Wrekin ICB", "NHS Staffordshire and Stoke-on-Trent ICB"] },
+                "North West": { color: "#264653", icbs: ["NHS Cheshire and Merseyside ICB", "NHS Greater Manchester ICB", "NHS Lancashire and South Cumbria ICB"] },
+                "North East and Yorkshire": { color: "#A855F7", icbs: ["NHS Humber and North Yorkshire ICB", "NHS North East and North Cumbria ICB", "NHS South Yorkshire ICB", "NHS West Yorkshire ICB"] },
+                "South West": { color: "#3B82F6", icbs: ["NHS Bath and North East Somerset, Swindon and Wiltshire ICB", "NHS Bristol, North Somerset and South Gloucestershire ICB", "NHS Cornwall and the Isles of Scilly ICB", "NHS Devon ICB", "NHS Dorset ICB", "NHS Gloucestershire ICB", "NHS Somerset ICB"] },
+                "East of England": { color: "#10B981", icbs: ["NHS Bedfordshire, Luton and Milton Keynes ICB", "NHS Cambridgeshire and Peterborough ICB", "NHS Hertfordshire and West Essex ICB", "NHS Mid and South Essex ICB", "NHS Norfolk and Waveney ICB", "NHS Suffolk and North East Essex ICB"] }
+            },
+            icbs: {
+                "NHS North Central London ICB": {
+                    trusts: [
+                        { name: "Royal Free London NHS Foundation Trust", type: "Acute", hospitals: ["Royal Free Hospital", "Barnet Hospital", "Chase Farm Hospital"] },
+                        { name: "University College London Hospitals NHS Foundation Trust", type: "Acute", hospitals: ["University College Hospital", "National Hospital for Neurology", "Eastman Dental Hospital", "Hospital for Tropical Diseases"] },
+                        { name: "North Middlesex University Hospital NHS Trust", type: "Acute", hospitals: ["North Middlesex University Hospital"] },
+                        { name: "Whittington Health NHS Trust", type: "Acute", hospitals: ["Whittington Hospital"] },
+                        { name: "Barnet, Enfield and Haringey Mental Health NHS Trust", type: "Mental Health", hospitals: ["St Ann's Hospital", "Chase Farm Mental Health Unit", "Dennis Scott Unit"] },
+                        { name: "Camden and Islington NHS Foundation Trust", type: "Mental Health", hospitals: ["St Pancras Hospital", "Highgate Mental Health Centre"] },
+                        { name: "Tavistock and Portman NHS Foundation Trust", type: "Mental Health", hospitals: ["Tavistock Centre"] },
+                        { name: "Central London Community Healthcare NHS Trust", type: "Community", hospitals: ["Various community sites across North London"] }
+                    ]
+                },
+                "NHS North East London ICB": {
+                    trusts: [
+                        { name: "Barts Health NHS Trust", type: "Acute", hospitals: ["The Royal London Hospital", "St Bartholomew's Hospital", "Whipps Cross Hospital", "Newham University Hospital", "Mile End Hospital"] },
+                        { name: "Barking, Havering and Redbridge University Hospitals NHS Trust", type: "Acute", hospitals: ["Queen's Hospital Romford", "King George Hospital"] },
+                        { name: "Homerton Healthcare NHS Foundation Trust", type: "Acute", hospitals: ["Homerton University Hospital"] },
+                        { name: "East London NHS Foundation Trust", type: "Mental Health", hospitals: ["City and Hackney Centre for Mental Health", "Tower Hamlets Centre for Mental Health", "Newham Centre for Mental Health"] },
+                        { name: "North East London NHS Foundation Trust", type: "Community", hospitals: ["Community services across NEL", "Goodmayes Hospital"] }
+                    ]
+                },
+                "NHS North West London ICB": {
+                    trusts: [
+                        { name: "Imperial College Healthcare NHS Trust", type: "Acute", hospitals: ["St Mary's Hospital", "Charing Cross Hospital", "Hammersmith Hospital", "Queen Charlotte's Hospital", "Western Eye Hospital"] },
+                        { name: "London North West University Healthcare NHS Trust", type: "Acute", hospitals: ["Northwick Park Hospital", "St Mark's Hospital", "Ealing Hospital", "Central Middlesex Hospital"] },
+                        { name: "The Hillingdon Hospitals NHS Foundation Trust", type: "Acute", hospitals: ["Hillingdon Hospital", "Mount Vernon Hospital"] },
+                        { name: "Chelsea and Westminster Hospital NHS Foundation Trust", type: "Acute", hospitals: ["Chelsea and Westminster Hospital", "West Middlesex University Hospital"] },
+                        { name: "Central and North West London NHS Foundation Trust", type: "Mental Health", hospitals: ["Park Royal Centre for Mental Health", "Gordon Hospital", "St Charles Hospital"] },
+                        { name: "West London NHS Trust", type: "Mental Health", hospitals: ["Broadmoor Hospital", "St Bernard's Hospital", "Lakeside Mental Health Unit"] },
+                        { name: "Hounslow and Richmond Community Healthcare NHS Trust", type: "Community", hospitals: ["Teddington Memorial Hospital", "Various community clinics"] }
+                    ]
+                },
+                "NHS South East London ICB": {
+                    trusts: [
+                        { name: "King's College Hospital NHS Foundation Trust", type: "Acute", hospitals: ["King's College Hospital", "Princess Royal University Hospital", "Orpington Hospital"] },
+                        { name: "Guy's and St Thomas' NHS Foundation Trust", type: "Acute", hospitals: ["Guy's Hospital", "St Thomas' Hospital", "Evelina London Children's Hospital"] },
+                        { name: "Lewisham and Greenwich NHS Trust", type: "Acute", hospitals: ["University Hospital Lewisham", "Queen Elizabeth Hospital Woolwich"] },
+                        { name: "South London and Maudsley NHS Foundation Trust", type: "Mental Health", hospitals: ["Maudsley Hospital", "Bethlem Royal Hospital", "Lambeth Hospital"] },
+                        { name: "Oxleas NHS Foundation Trust", type: "Mental Health", hospitals: ["Queen Mary's Hospital Sidcup", "Memorial Hospital Shooters Hill", "Bracton Centre"] }
+                    ]
+                },
+                "NHS South West London ICB": {
+                    trusts: [
+                        { name: "St George's University Hospitals NHS Foundation Trust", type: "Acute", hospitals: ["St George's Hospital Tooting", "Queen Mary's Hospital Roehampton"] },
+                        { name: "Epsom and St Helier University Hospitals NHS Trust", type: "Acute", hospitals: ["Epsom Hospital", "St Helier Hospital", "Sutton Hospital"] },
+                        { name: "Kingston Hospital NHS Foundation Trust", type: "Acute", hospitals: ["Kingston Hospital"] },
+                        { name: "Croydon Health Services NHS Trust", type: "Acute", hospitals: ["Croydon University Hospital", "Purley War Memorial Hospital"] },
+                        { name: "South West London and St George's Mental Health NHS Trust", type: "Mental Health", hospitals: ["Springfield University Hospital", "Tolworth Hospital", "Queen Mary's Hospital"] }
+                    ]
+                },
+                "NHS Buckinghamshire, Oxfordshire and Berkshire West ICB": {
+                    trusts: [
+                        { name: "Oxford University Hospitals NHS Foundation Trust", type: "Acute", hospitals: ["John Radcliffe Hospital", "Churchill Hospital", "Nuffield Orthopaedic Centre", "Horton General Hospital"] },
+                        { name: "Buckinghamshire Healthcare NHS Trust", type: "Acute", hospitals: ["Stoke Mandeville Hospital", "Wycombe Hospital", "Amersham Hospital"] },
+                        { name: "Royal Berkshire NHS Foundation Trust", type: "Acute", hospitals: ["Royal Berkshire Hospital", "West Berkshire Community Hospital"] },
+                        { name: "Oxford Health NHS Foundation Trust", type: "Mental Health", hospitals: ["Warneford Hospital", "Littlemore Mental Health Centre", "Whiteleaf Centre"] },
+                        { name: "Berkshire Healthcare NHS Foundation Trust", type: "Mental Health", hospitals: ["Prospect Park Hospital", "Community mental health centres"] }
+                    ]
+                },
+                "NHS Frimley ICB": {
+                    trusts: [
+                        { name: "Frimley Health NHS Foundation Trust", type: "Acute", hospitals: ["Frimley Park Hospital", "Wexham Park Hospital", "Heatherwood Hospital"] },
+                        { name: "Surrey and Borders Partnership NHS Foundation Trust", type: "Mental Health", hospitals: ["Abraham Cowley Unit", "Farnham Road Hospital"] }
+                    ]
+                },
+                "NHS Hampshire and Isle of Wight ICB": {
+                    trusts: [
+                        { name: "Hampshire Hospitals NHS Foundation Trust", type: "Acute", hospitals: ["Basingstoke and North Hampshire Hospital", "Royal Hampshire County Hospital", "Andover War Memorial Hospital"] },
+                        { name: "Portsmouth Hospitals University NHS Trust", type: "Acute", hospitals: ["Queen Alexandra Hospital", "St Mary's Hospital Portsmouth"] },
+                        { name: "University Hospital Southampton NHS Foundation Trust", type: "Acute", hospitals: ["Southampton General Hospital", "Princess Anne Hospital", "Countess Mountbatten House"] },
+                        { name: "Isle of Wight NHS Trust", type: "Acute", hospitals: ["St Mary's Hospital Isle of Wight"] },
+                        { name: "Southern Health NHS Foundation Trust", type: "Mental Health", hospitals: ["Melbury Lodge", "Antelope House", "Parklands Hospital"] },
+                        { name: "Solent NHS Trust", type: "Community", hospitals: ["St Mary's Community Health Campus", "Various community sites"] }
+                    ]
+                },
+                "NHS Kent and Medway ICB": {
+                    trusts: [
+                        { name: "Maidstone and Tunbridge Wells NHS Trust", type: "Acute", hospitals: ["Maidstone Hospital", "Tunbridge Wells Hospital"] },
+                        { name: "East Kent Hospitals University NHS Foundation Trust", type: "Acute", hospitals: ["William Harvey Hospital", "Kent and Canterbury Hospital", "Queen Elizabeth The Queen Mother Hospital"] },
+                        { name: "Medway NHS Foundation Trust", type: "Acute", hospitals: ["Medway Maritime Hospital"] },
+                        { name: "Dartford and Gravesham NHS Trust", type: "Acute", hospitals: ["Darent Valley Hospital"] },
+                        { name: "Kent and Medway NHS and Social Care Partnership Trust", type: "Mental Health", hospitals: ["Priority House", "Trevor Gibbens Unit", "Littlebrook Hospital"] },
+                        { name: "Kent Community Health NHS Foundation Trust", type: "Community", hospitals: ["Community hospitals across Kent", "Minor injury units"] }
+                    ]
+                },
+                "NHS Surrey Heartlands ICB": {
+                    trusts: [
+                        { name: "Ashford and St Peter's Hospitals NHS Foundation Trust", type: "Acute", hospitals: ["St Peter's Hospital Chertsey", "Ashford Hospital"] },
+                        { name: "Royal Surrey NHS Foundation Trust", type: "Acute", hospitals: ["Royal Surrey County Hospital"] },
+                        { name: "Surrey and Sussex Healthcare NHS Trust", type: "Acute", hospitals: ["East Surrey Hospital", "Crawley Hospital"] },
+                        { name: "Epsom and St Helier University Hospitals NHS Trust", type: "Acute", hospitals: ["Epsom Hospital (Surrey sites)"] },
+                        { name: "Central Surrey Health", type: "Community", hospitals: ["Leatherhead Hospital", "Dorking Hospital"] }
+                    ]
+                },
+                "NHS Sussex ICB": {
+                    trusts: [
+                        { name: "University Hospitals Sussex NHS Foundation Trust", type: "Acute", hospitals: ["Royal Sussex County Hospital", "Princess Royal Hospital Haywards Heath", "Worthing Hospital", "St Richard's Hospital"] },
+                        { name: "Queen Victoria Hospital NHS Foundation Trust", type: "Specialist", hospitals: ["Queen Victoria Hospital East Grinstead"] },
+                        { name: "Sussex Community NHS Foundation Trust", type: "Community", hospitals: ["Brighton General Hospital", "Bognor Regis War Memorial Hospital", "Crawley Hospital"] },
+                        { name: "Sussex Partnership NHS Foundation Trust", type: "Mental Health", hospitals: ["Mill View Hospital", "Langley Green Hospital", "Meadowfield Hospital"] }
+                    ]
+                },
+                "NHS Birmingham and Solihull ICB": {
+                    trusts: [
+                        { name: "University Hospitals Birmingham NHS Foundation Trust", type: "Acute", hospitals: ["Queen Elizabeth Hospital Birmingham", "Heartlands Hospital", "Good Hope Hospital", "Solihull Hospital"] },
+                        { name: "Birmingham Women's and Children's NHS Foundation Trust", type: "Specialist", hospitals: ["Birmingham Women's Hospital", "Birmingham Children's Hospital"] },
+                        { name: "The Royal Orthopaedic Hospital NHS Foundation Trust", type: "Specialist", hospitals: ["Royal Orthopaedic Hospital"] },
+                        { name: "Birmingham Community Healthcare NHS Foundation Trust", type: "Community", hospitals: ["Moseley Hall Hospital", "West Heath Hospital"] },
+                        { name: "Birmingham and Solihull Mental Health NHS Foundation Trust", type: "Mental Health", hospitals: ["Uffculme Centre", "Oleaster Unit", "Highcroft Hospital"] }
+                    ]
+                },
+                "NHS Black Country ICB": {
+                    trusts: [
+                        { name: "The Dudley Group NHS Foundation Trust", type: "Acute", hospitals: ["Russells Hall Hospital", "Corbett Hospital", "Guest Hospital"] },
+                        { name: "Sandwell and West Birmingham NHS Trust", type: "Acute", hospitals: ["Sandwell General Hospital", "City Hospital Birmingham", "Midland Metropolitan University Hospital"] },
+                        { name: "Walsall Healthcare NHS Trust", type: "Acute", hospitals: ["Walsall Manor Hospital"] },
+                        { name: "The Royal Wolverhampton NHS Trust", type: "Acute", hospitals: ["New Cross Hospital", "Cannock Chase Hospital", "West Park Hospital"] },
+                        { name: "Black Country Healthcare NHS Foundation Trust", type: "Mental Health", hospitals: ["Penn Hospital", "Edward Street Hospital", "Hallam Street Hospital"] }
+                    ]
+                },
+                "NHS Coventry and Warwickshire ICB": {
+                    trusts: [
+                        { name: "University Hospitals Coventry and Warwickshire NHS Trust", type: "Acute", hospitals: ["University Hospital Coventry", "Hospital of St Cross Rugby"] },
+                        { name: "South Warwickshire NHS Foundation Trust", type: "Acute", hospitals: ["Warwick Hospital", "Stratford Hospital"] },
+                        { name: "George Eliot Hospital NHS Trust", type: "Acute", hospitals: ["George Eliot Hospital Nuneaton"] },
+                        { name: "Coventry and Warwickshire Partnership NHS Trust", type: "Mental Health", hospitals: ["Caludon Centre", "St Michael's Hospital Warwick"] }
+                    ]
+                },
+                "NHS Derby and Derbyshire ICB": {
+                    trusts: [
+                        { name: "University Hospitals of Derby and Burton NHS Foundation Trust", type: "Acute", hospitals: ["Royal Derby Hospital", "Queen's Hospital Burton", "London Road Community Hospital"] },
+                        { name: "Chesterfield Royal Hospital NHS Foundation Trust", type: "Acute", hospitals: ["Chesterfield Royal Hospital"] },
+                        { name: "Derbyshire Community Health Services NHS Foundation Trust", type: "Community", hospitals: ["Ilkeston Community Hospital", "Ripley Hospital", "Whitworth Hospital"] },
+                        { name: "Derbyshire Healthcare NHS Foundation Trust", type: "Mental Health", hospitals: ["Kingsway Hospital", "Hartington Unit"] }
+                    ]
+                },
+                "NHS Herefordshire and Worcestershire ICB": {
+                    trusts: [
+                        { name: "Worcestershire Acute Hospitals NHS Trust", type: "Acute", hospitals: ["Worcestershire Royal Hospital", "Alexandra Hospital Redditch", "Kidderminster Hospital"] },
+                        { name: "Wye Valley NHS Trust", type: "Acute", hospitals: ["Hereford County Hospital"] },
+                        { name: "Herefordshire and Worcestershire Health and Care NHS Trust", type: "Mental Health", hospitals: ["Newtown Hospital Worcester", "Stonebow Unit Hereford"] }
+                    ]
+                },
+                "NHS Leicester, Leicestershire and Rutland ICB": {
+                    trusts: [
+                        { name: "University Hospitals of Leicester NHS Trust", type: "Acute", hospitals: ["Leicester Royal Infirmary", "Leicester General Hospital", "Glenfield Hospital"] },
+                        { name: "Leicestershire Partnership NHS Trust", type: "Mental Health", hospitals: ["Bradgate Mental Health Unit", "Bennion Centre", "Agnes Unit"] }
+                    ]
+                },
+                "NHS Lincolnshire ICB": {
+                    trusts: [
+                        { name: "United Lincolnshire Hospitals NHS Trust", type: "Acute", hospitals: ["Lincoln County Hospital", "Pilgrim Hospital Boston", "Grantham and District Hospital"] },
+                        { name: "Lincolnshire Community Health Services NHS Trust", type: "Community", hospitals: ["Community hospitals across Lincolnshire"] },
+                        { name: "Lincolnshire Partnership NHS Foundation Trust", type: "Mental Health", hospitals: ["Peter Hodgkinson Centre", "Ash Villa"] }
+                    ]
+                },
+                "NHS Northamptonshire ICB": {
+                    trusts: [
+                        { name: "Northampton General Hospital NHS Trust", type: "Acute", hospitals: ["Northampton General Hospital"] },
+                        { name: "Kettering General Hospital NHS Foundation Trust", type: "Acute", hospitals: ["Kettering General Hospital"] },
+                        { name: "Northamptonshire Healthcare NHS Foundation Trust", type: "Mental Health", hospitals: ["St Mary's Hospital Kettering", "Berrywood Hospital"] }
+                    ]
+                },
+                "NHS Nottingham and Nottinghamshire ICB": {
+                    trusts: [
+                        { name: "Nottingham University Hospitals NHS Trust", type: "Acute", hospitals: ["Queen's Medical Centre", "City Hospital Nottingham", "Nottingham Treatment Centre"] },
+                        { name: "Sherwood Forest Hospitals NHS Foundation Trust", type: "Acute", hospitals: ["King's Mill Hospital", "Newark Hospital", "Mansfield Community Hospital"] },
+                        { name: "Nottinghamshire Healthcare NHS Foundation Trust", type: "Mental Health", hospitals: ["Highbury Hospital", "Rampton Hospital", "Wathwood Hospital"] }
+                    ]
+                },
+                "NHS Shropshire, Telford and Wrekin ICB": {
+                    trusts: [
+                        { name: "Shrewsbury and Telford Hospital NHS Trust", type: "Acute", hospitals: ["Royal Shrewsbury Hospital", "Princess Royal Hospital Telford"] },
+                        { name: "The Robert Jones and Agnes Hunt Orthopaedic Hospital NHS Foundation Trust", type: "Specialist", hospitals: ["RJAH Orthopaedic Hospital Oswestry"] },
+                        { name: "Shropshire Community Health NHS Trust", type: "Community", hospitals: ["Bridgnorth Hospital", "Ludlow Hospital", "Whitchurch Hospital"] },
+                        { name: "Midlands Partnership University NHS Foundation Trust", type: "Mental Health", hospitals: ["Redwoods Centre Shrewsbury"] }
+                    ]
+                },
+                "NHS Staffordshire and Stoke-on-Trent ICB": {
+                    trusts: [
+                        { name: "University Hospitals of North Midlands NHS Trust", type: "Acute", hospitals: ["Royal Stoke University Hospital", "County Hospital Stafford"] },
+                        { name: "Royal Stoke University Hospital", type: "Acute", hospitals: ["Royal Stoke main site"] },
+                        { name: "North Staffordshire Combined Healthcare NHS Trust", type: "Mental Health", hospitals: ["Harplands Hospital"] },
+                        { name: "Midlands Partnership University NHS Foundation Trust", type: "Mental Health", hospitals: ["St George's Hospital Stafford", "George Bryan Centre"] }
+                    ]
+                },
+                "NHS Cheshire and Merseyside ICB": {
+                    trusts: [
+                        { name: "Liverpool University Hospitals NHS Foundation Trust", type: "Acute", hospitals: ["Royal Liverpool University Hospital", "Aintree University Hospital", "Broadgreen Hospital", "Liverpool Women's NHS Foundation Trust collaboration"] },
+                        { name: "Liverpool Heart and Chest Hospital NHS Foundation Trust", type: "Specialist", hospitals: ["Liverpool Heart and Chest Hospital"] },
+                        { name: "Liverpool Women's NHS Foundation Trust", type: "Specialist", hospitals: ["Liverpool Women's Hospital", "Crown Street site"] },
+                        { name: "The Walton Centre NHS Foundation Trust", type: "Specialist", hospitals: ["The Walton Centre"] },
+                        { name: "Alder Hey Children's NHS Foundation Trust", type: "Specialist", hospitals: ["Alder Hey Children's Hospital"] },
+                        { name: "The Clatterbridge Cancer Centre NHS Foundation Trust", type: "Specialist", hospitals: ["Clatterbridge Cancer Centre Liverpool", "Clatterbridge Cancer Centre Wirral"] },
+                        { name: "Countess of Chester Hospital NHS Foundation Trust", type: "Acute", hospitals: ["Countess of Chester Hospital", "Ellesmere Port Hospital"] },
+                        { name: "Wirral University Teaching Hospital NHS Foundation Trust", type: "Acute", hospitals: ["Arrowe Park Hospital", "Clatterbridge Hospital"] },
+                        { name: "Mersey and West Lancashire Teaching Hospitals NHS Trust", type: "Acute", hospitals: ["Whiston Hospital", "St Helens Hospital", "Southport Hospital", "Ormskirk Hospital"] },
+                        { name: "Mid Cheshire Hospitals NHS Foundation Trust", type: "Acute", hospitals: ["Leighton Hospital", "Victoria Infirmary Northwich"] },
+                        { name: "East Cheshire NHS Trust", type: "Acute", hospitals: ["Macclesfield District General Hospital", "Congleton War Memorial Hospital"] },
+                        { name: "Warrington and Halton Teaching Hospitals NHS Foundation Trust", type: "Acute", hospitals: ["Warrington Hospital", "Halton General Hospital"] },
+                        { name: "Mersey Care NHS Foundation Trust", type: "Mental Health", hospitals: ["Ashworth Hospital", "Clock View Hospital", "Windsor House"] },
+                        { name: "Cheshire and Wirral Partnership NHS Foundation Trust", type: "Mental Health", hospitals: ["Bowmere Hospital Chester", "Eastway Mental Health Unit"] }
+                    ]
+                },
+                "NHS Greater Manchester ICB": {
+                    trusts: [
+                        { name: "Manchester University NHS Foundation Trust", type: "Acute", hospitals: ["Manchester Royal Infirmary", "Wythenshawe Hospital", "Royal Manchester Children's Hospital", "Saint Mary's Hospital", "Manchester Royal Eye Hospital", "Trafford General Hospital"] },
+                        { name: "Northern Care Alliance NHS Foundation Trust", type: "Acute", hospitals: ["Salford Royal Hospital", "Royal Oldham Hospital", "Fairfield General Hospital", "Rochdale Infirmary"] },
+                        { name: "Stockport NHS Foundation Trust", type: "Acute", hospitals: ["Stepping Hill Hospital"] },
+                        { name: "Tameside and Glossop Integrated Care NHS Foundation Trust", type: "Acute", hospitals: ["Tameside General Hospital"] },
+                        { name: "Wrightington, Wigan and Leigh NHS Foundation Trust", type: "Acute", hospitals: ["Royal Albert Edward Infirmary", "Wrightington Hospital", "Leigh Infirmary"] },
+                        { name: "Bolton NHS Foundation Trust", type: "Acute", hospitals: ["Royal Bolton Hospital"] },
+                        { name: "The Christie NHS Foundation Trust", type: "Specialist", hospitals: ["The Christie Hospital"] },
+                        { name: "Greater Manchester Mental Health NHS Foundation Trust", type: "Mental Health", hospitals: ["Park House", "Prestwich Hospital", "Royal Bolton Hospital MH Unit"] },
+                        { name: "Pennine Care NHS Foundation Trust", type: "Mental Health", hospitals: ["Birch Hill Hospital", "Fairfield General Hospital MH Unit"] }
+                    ]
+                },
+                "NHS Lancashire and South Cumbria ICB": {
+                    trusts: [
+                        { name: "Lancashire Teaching Hospitals NHS Foundation Trust", type: "Acute", hospitals: ["Royal Preston Hospital", "Chorley and South Ribble Hospital"] },
+                        { name: "East Lancashire Hospitals NHS Trust", type: "Acute", hospitals: ["Royal Blackburn Hospital", "Burnley General Hospital"] },
+                        { name: "Blackpool Teaching Hospitals NHS Foundation Trust", type: "Acute", hospitals: ["Blackpool Victoria Hospital", "Clifton Hospital"] },
+                        { name: "University Hospitals of Morecambe Bay NHS Foundation Trust", type: "Acute", hospitals: ["Royal Lancaster Infirmary", "Furness General Hospital", "Westmorland General Hospital"] },
+                        { name: "Lancashire and South Cumbria NHS Foundation Trust", type: "Mental Health", hospitals: ["The Harbour Blackpool", "Ridge Lea Hospital Lancaster", "Guild Lodge Preston"] }
+                    ]
+                },
+                "NHS Humber and North Yorkshire ICB": {
+                    trusts: [
+                        { name: "York and Scarborough Teaching Hospitals NHS Foundation Trust", type: "Acute", hospitals: ["York Hospital", "Scarborough Hospital", "Bridlington Hospital"] },
+                        { name: "Hull University Teaching Hospitals NHS Trust", type: "Acute", hospitals: ["Hull Royal Infirmary", "Castle Hill Hospital"] },
+                        { name: "Northern Lincolnshire and Goole NHS Foundation Trust", type: "Acute", hospitals: ["Diana Princess of Wales Hospital Grimsby", "Scunthorpe General Hospital", "Goole Hospital"] },
+                        { name: "Humber Teaching NHS Foundation Trust", type: "Mental Health", hospitals: ["Whitby Hospital", "Miranda House Hull", "Mill View Court Beverley"] }
+                    ]
+                },
+                "NHS North East and North Cumbria ICB": {
+                    trusts: [
+                        { name: "The Newcastle upon Tyne Hospitals NHS Foundation Trust", type: "Acute", hospitals: ["Royal Victoria Infirmary", "Freeman Hospital", "Great North Children's Hospital"] },
+                        { name: "Northumbria Healthcare NHS Foundation Trust", type: "Acute", hospitals: ["Northumbria Specialist Emergency Care Hospital", "Wansbeck General Hospital", "Hexham General Hospital", "North Tyneside General Hospital"] },
+                        { name: "South Tyneside and Sunderland NHS Foundation Trust", type: "Acute", hospitals: ["Sunderland Royal Hospital", "South Tyneside District Hospital"] },
+                        { name: "County Durham and Darlington NHS Foundation Trust", type: "Acute", hospitals: ["University Hospital of North Durham", "Darlington Memorial Hospital", "Bishop Auckland Hospital"] },
+                        { name: "North Tees and Hartlepool NHS Foundation Trust", type: "Acute", hospitals: ["University Hospital of North Tees", "University Hospital of Hartlepool"] },
+                        { name: "South Tees Hospitals NHS Foundation Trust", type: "Acute", hospitals: ["James Cook University Hospital", "Friarage Hospital Northallerton"] },
+                        { name: "Gateshead Health NHS Foundation Trust", type: "Acute", hospitals: ["Queen Elizabeth Hospital Gateshead"] },
+                        { name: "North Cumbria Integrated Care NHS Foundation Trust", type: "Acute", hospitals: ["Cumberland Infirmary", "West Cumberland Hospital"] },
+                        { name: "Cumbria, Northumberland, Tyne and Wear NHS Foundation Trust", type: "Mental Health", hospitals: ["St Nicholas Hospital", "Carleton Clinic Carlisle", "St George's Park Morpeth"] },
+                        { name: "Tees, Esk and Wear Valleys NHS Foundation Trust", type: "Mental Health", hospitals: ["Roseberry Park Middlesbrough", "West Park Hospital Darlington", "Cross Lane Hospital Scarborough"] }
+                    ]
+                },
+                "NHS South Yorkshire ICB": {
+                    trusts: [
+                        { name: "Sheffield Teaching Hospitals NHS Foundation Trust", type: "Acute", hospitals: ["Royal Hallamshire Hospital", "Northern General Hospital", "Weston Park Cancer Hospital", "Jessop Wing Maternity"] },
+                        { name: "Sheffield Children's NHS Foundation Trust", type: "Specialist", hospitals: ["Sheffield Children's Hospital"] },
+                        { name: "Doncaster and Bassetlaw Teaching Hospitals NHS Foundation Trust", type: "Acute", hospitals: ["Doncaster Royal Infirmary", "Bassetlaw Hospital"] },
+                        { name: "Barnsley Hospital NHS Foundation Trust", type: "Acute", hospitals: ["Barnsley Hospital"] },
+                        { name: "The Rotherham NHS Foundation Trust", type: "Acute", hospitals: ["Rotherham Hospital"] },
+                        { name: "Sheffield Health and Social Care NHS Foundation Trust", type: "Mental Health", hospitals: ["Michael Carlisle Centre", "Longley Centre", "Forest Lodge"] },
+                        { name: "Rotherham Doncaster and South Humber NHS Foundation Trust", type: "Mental Health", hospitals: ["Swallownest Court Rotherham", "Tickhill Road Hospital Doncaster"] }
+                    ]
+                },
+                "NHS West Yorkshire ICB": {
+                    trusts: [
+                        { name: "Leeds Teaching Hospitals NHS Trust", type: "Acute", hospitals: ["Leeds General Infirmary", "St James's University Hospital", "Chapel Allerton Hospital", "Seacroft Hospital", "Wharfedale Hospital"] },
+                        { name: "Bradford Teaching Hospitals NHS Foundation Trust", type: "Acute", hospitals: ["Bradford Royal Infirmary", "St Luke's Hospital"] },
+                        { name: "Calderdale and Huddersfield NHS Foundation Trust", type: "Acute", hospitals: ["Calderdale Royal Hospital", "Huddersfield Royal Infirmary"] },
+                        { name: "Mid Yorkshire Teaching NHS Trust", type: "Acute", hospitals: ["Pinderfields Hospital Wakefield", "Dewsbury and District Hospital", "Pontefract Hospital"] },
+                        { name: "The Mid Yorkshire Hospitals NHS Trust", type: "Acute", hospitals: ["Pontefract site"] },
+                        { name: "Airedale NHS Foundation Trust", type: "Acute", hospitals: ["Airedale General Hospital"] },
+                        { name: "Leeds and York Partnership NHS Foundation Trust", type: "Mental Health", hospitals: ["The Becklin Centre Leeds", "Newsam Centre Leeds", "Bootham Park Hospital York"] },
+                        { name: "Bradford District Care NHS Foundation Trust", type: "Mental Health", hospitals: ["Lynfield Mount Hospital", "Airedale Centre for Mental Health"] },
+                        { name: "South West Yorkshire Partnership NHS Foundation Trust", type: "Mental Health", hospitals: ["Fieldhead Hospital Wakefield", "The Dales Calderdale"] }
+                    ]
+                },
+                "NHS Bath and North East Somerset, Swindon and Wiltshire ICB": {
+                    trusts: [
+                        { name: "Royal United Hospitals Bath NHS Foundation Trust", type: "Acute", hospitals: ["Royal United Hospital Bath", "St Martin's Hospital Bath"] },
+                        { name: "Great Western Hospitals NHS Foundation Trust", type: "Acute", hospitals: ["Great Western Hospital Swindon"] },
+                        { name: "Salisbury NHS Foundation Trust", type: "Acute", hospitals: ["Salisbury District Hospital"] },
+                        { name: "Avon and Wiltshire Mental Health Partnership NHS Trust", type: "Mental Health", hospitals: ["Green Lane Hospital Devizes", "Fountain Way Salisbury", "Hillview Lodge Swindon"] }
+                    ]
+                },
+                "NHS Bristol, North Somerset and South Gloucestershire ICB": {
+                    trusts: [
+                        { name: "University Hospitals Bristol and Weston NHS Foundation Trust", type: "Acute", hospitals: ["Bristol Royal Infirmary", "Bristol Royal Hospital for Children", "Bristol Heart Institute", "Weston General Hospital", "South Bristol Community Hospital"] },
+                        { name: "North Bristol NHS Trust", type: "Acute", hospitals: ["Southmead Hospital", "Cossham Hospital"] },
+                        { name: "Avon and Wiltshire Mental Health Partnership NHS Trust", type: "Mental Health", hospitals: ["Callington Road Hospital Bristol", "Blackberry Hill Hospital"] },
+                        { name: "Sirona Care and Health", type: "Community", hospitals: ["Community services across BNSSG"] }
+                    ]
+                },
+                "NHS Cornwall and the Isles of Scilly ICB": {
+                    trusts: [
+                        { name: "Royal Cornwall Hospitals NHS Trust", type: "Acute", hospitals: ["Royal Cornwall Hospital Treliske", "West Cornwall Hospital Penzance", "St Michael's Hospital Hayle"] },
+                        { name: "Cornwall Partnership NHS Foundation Trust", type: "Mental Health", hospitals: ["Bodmin Hospital", "Longreach House Redruth", "Sowenna CAMHS Unit"] }
+                    ]
+                },
+                "NHS Devon ICB": {
+                    trusts: [
+                        { name: "Royal Devon University Healthcare NHS Foundation Trust", type: "Acute", hospitals: ["Royal Devon and Exeter Hospital", "North Devon District Hospital", "Community hospitals across Devon"] },
+                        { name: "University Hospitals Plymouth NHS Trust", type: "Acute", hospitals: ["Derriford Hospital"] },
+                        { name: "Torbay and South Devon NHS Foundation Trust", type: "Acute", hospitals: ["Torbay Hospital", "Community hospitals in South Devon"] },
+                        { name: "Devon Partnership NHS Trust", type: "Mental Health", hospitals: ["Wonford House Exeter", "Glenbourne Unit Plymouth"] },
+                        { name: "Livewell Southwest", type: "Community", hospitals: ["Mount Gould Hospital Plymouth", "Community services across Plymouth and South Devon"] }
+                    ]
+                },
+                "NHS Dorset ICB": {
+                    trusts: [
+                        { name: "University Hospitals Dorset NHS Foundation Trust", type: "Acute", hospitals: ["Royal Bournemouth Hospital", "Poole Hospital", "Christchurch Hospital"] },
+                        { name: "Dorset County Hospital NHS Foundation Trust", type: "Acute", hospitals: ["Dorset County Hospital Dorchester"] },
+                        { name: "Dorset Healthcare University NHS Foundation Trust", type: "Mental Health", hospitals: ["St Ann's Hospital Poole", "Forston Clinic Dorchester", "Alderney Hospital"] }
+                    ]
+                },
+                "NHS Gloucestershire ICB": {
+                    trusts: [
+                        { name: "Gloucestershire Hospitals NHS Foundation Trust", type: "Acute", hospitals: ["Gloucestershire Royal Hospital", "Cheltenham General Hospital"] },
+                        { name: "Gloucestershire Health and Care NHS Foundation Trust", type: "Mental Health", hospitals: ["Wotton Lawn Hospital Gloucester", "Charlton Lane Centre Cheltenham"] }
+                    ]
+                },
+                "NHS Somerset ICB": {
+                    trusts: [
+                        { name: "Somerset NHS Foundation Trust", type: "Acute", hospitals: ["Musgrove Park Hospital Taunton", "Community hospitals across Somerset"] },
+                        { name: "Yeovil District Hospital NHS Foundation Trust", type: "Acute", hospitals: ["Yeovil District Hospital"] }
+                    ]
+                },
+                "NHS Bedfordshire, Luton and Milton Keynes ICB": {
+                    trusts: [
+                        { name: "Bedfordshire Hospitals NHS Foundation Trust", type: "Acute", hospitals: ["Luton and Dunstable University Hospital", "Bedford Hospital"] },
+                        { name: "Milton Keynes University Hospital NHS Foundation Trust", type: "Acute", hospitals: ["Milton Keynes University Hospital"] },
+                        { name: "East London NHS Foundation Trust", type: "Mental Health", hospitals: ["Campbell Centre Milton Keynes", "Charter House Luton"] },
+                        { name: "Central and North West London NHS Foundation Trust", type: "Mental Health", hospitals: ["Mental health services across Beds/Luton"] }
+                    ]
+                },
+                "NHS Cambridgeshire and Peterborough ICB": {
+                    trusts: [
+                        { name: "Cambridge University Hospitals NHS Foundation Trust", type: "Acute", hospitals: ["Addenbrooke's Hospital", "Rosie Hospital Maternity"] },
+                        { name: "North West Anglia NHS Foundation Trust", type: "Acute", hospitals: ["Peterborough City Hospital", "Hinchingbrooke Hospital", "Stamford Hospital"] },
+                        { name: "Royal Papworth Hospital NHS Foundation Trust", type: "Specialist", hospitals: ["Royal Papworth Hospital"] },
+                        { name: "Cambridgeshire and Peterborough NHS Foundation Trust", type: "Mental Health", hospitals: ["Fulbourn Hospital Cambridge", "Cavell Centre Peterborough"] },
+                        { name: "Cambridgeshire Community Services NHS Trust", type: "Community", hospitals: ["Community services across Cambridgeshire and Peterborough"] }
+                    ]
+                },
+                "NHS Hertfordshire and West Essex ICB": {
+                    trusts: [
+                        { name: "West Hertfordshire Teaching Hospitals NHS Trust", type: "Acute", hospitals: ["Watford General Hospital", "St Albans City Hospital", "Hemel Hempstead Hospital"] },
+                        { name: "East and North Hertfordshire NHS Trust", type: "Acute", hospitals: ["Lister Hospital Stevenage", "New QEII Hospital Welwyn"] },
+                        { name: "Princess Alexandra Hospital NHS Trust", type: "Acute", hospitals: ["Princess Alexandra Hospital Harlow"] },
+                        { name: "Hertfordshire Partnership University NHS Foundation Trust", type: "Mental Health", hospitals: ["Kingsley Green Unit", "Colne House St Albans"] },
+                        { name: "Hertfordshire Community NHS Trust", type: "Community", hospitals: ["Community services across Hertfordshire"] }
+                    ]
+                },
+                "NHS Mid and South Essex ICB": {
+                    trusts: [
+                        { name: "Mid and South Essex NHS Foundation Trust", type: "Acute", hospitals: ["Broomfield Hospital Chelmsford", "Basildon University Hospital", "Southend University Hospital"] },
+                        { name: "Essex Partnership University NHS Foundation Trust", type: "Mental Health", hospitals: ["Linden Centre Chelmsford", "Rochford Hospital"] },
+                        { name: "NELFT NHS Foundation Trust", type: "Community", hospitals: ["Community services across Mid/South Essex"] }
+                    ]
+                },
+                "NHS Norfolk and Waveney ICB": {
+                    trusts: [
+                        { name: "Norfolk and Norwich University Hospitals NHS Foundation Trust", type: "Acute", hospitals: ["Norfolk and Norwich University Hospital", "Cromer Hospital"] },
+                        { name: "James Paget University Hospitals NHS Foundation Trust", type: "Acute", hospitals: ["James Paget Hospital Great Yarmouth"] },
+                        { name: "Queen Elizabeth Hospital King's Lynn NHS Foundation Trust", type: "Acute", hospitals: ["Queen Elizabeth Hospital King's Lynn"] },
+                        { name: "Norfolk and Suffolk NHS Foundation Trust", type: "Mental Health", hospitals: ["Hellesdon Hospital Norwich", "Carlton Court Lowestoft"] },
+                        { name: "Norfolk Community Health and Care NHS Trust", type: "Community", hospitals: ["Community hospitals across Norfolk"] }
+                    ]
+                },
+                "NHS Suffolk and North East Essex ICB": {
+                    trusts: [
+                        { name: "East Suffolk and North Essex NHS Foundation Trust", type: "Acute", hospitals: ["Ipswich Hospital", "Colchester Hospital"] },
+                        { name: "West Suffolk NHS Foundation Trust", type: "Acute", hospitals: ["West Suffolk Hospital Bury St Edmunds", "Newmarket Hospital"] },
+                        { name: "Norfolk and Suffolk NHS Foundation Trust", type: "Mental Health", hospitals: ["Woodlands Unit Ipswich", "Wedgwood Unit Bury St Edmunds"] },
+                        { name: "Suffolk GP Federation", type: "Community", hospitals: ["Community services across Suffolk"] }
+                    ]
+                }
+            }
+        };
+
+        // State
+        let currentView = 'regions';
+        let selectedRegion = null;
+        let selectedICB = null;
+        let activeRegionFilter = 'all';
+        let activeTrustTypeFilter = 'all';
+        let searchQuery = '';
+        let mainChart = null;
+        let regionChart = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeFilters();
+            initializeEventListeners();
+            updateView();
+            initializeCharts();
+        });
+
+        function initializeFilters() {
+            const regionFilters = document.getElementById('regionFilters');
+
+            // Add "All Regions" button
+            regionFilters.innerHTML = `
+                <button class="region-btn active" data-region="all">
+                    <span class="region-dot" style="background: linear-gradient(45deg, #E63946, #F4A261, #2A9D8F, #264653)"></span>
+                    All Regions
+                    <span class="region-count">42</span>
+                </button>
+            `;
+
+            // Add region buttons
+            Object.entries(NHS_DATA.regions).forEach(([region, data]) => {
+                regionFilters.innerHTML += `
+                    <button class="region-btn" data-region="${region}">
+                        <span class="region-dot" style="background: ${data.color}"></span>
+                        ${region}
+                        <span class="region-count">${data.icbs.length}</span>
+                    </button>
+                `;
+            });
+
+            // Trust type filters
+            const trustTypeFilters = document.getElementById('trustTypeFilters');
+            const types = ['all', 'Acute', 'Mental Health', 'Community', 'Specialist', 'Ambulance'];
+            const typeColors = {
+                'all': '#888',
+                'Acute': '#E63946',
+                'Mental Health': '#A855F7',
+                'Community': '#2A9D8F',
+                'Specialist': '#3B82F6',
+                'Ambulance': '#FBB724'
+            };
+
+            types.forEach(type => {
+                trustTypeFilters.innerHTML += `
+                    <button class="region-btn ${type === 'all' ? 'active' : ''}" data-type="${type}">
+                        <span class="region-dot" style="background: ${typeColors[type]}"></span>
+                        ${type === 'all' ? 'All Types' : type}
+                    </button>
+                `;
+            });
+        }
+
+        function initializeEventListeners() {
+            // Region filter clicks
+            document.getElementById('regionFilters').addEventListener('click', (e) => {
+                const btn = e.target.closest('.region-btn');
+                if (btn) {
+                    document.querySelectorAll('#regionFilters .region-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    activeRegionFilter = btn.dataset.region;
+                    updateView();
+                }
+            });
+
+            // Trust type filter clicks
+            document.getElementById('trustTypeFilters').addEventListener('click', (e) => {
+                const btn = e.target.closest('.region-btn');
+                if (btn) {
+                    document.querySelectorAll('#trustTypeFilters .region-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    activeTrustTypeFilter = btn.dataset.type;
+                    updateView();
+                }
+            });
+
+            // Search
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                searchQuery = e.target.value.toLowerCase();
+                updateView();
+            });
+
+            // View toggle
+            document.querySelectorAll('.view-toggle button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.view-toggle button').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+
+                    if (btn.dataset.view === 'list') {
+                        document.getElementById('listView').style.display = 'block';
+                        document.getElementById('chartView').style.display = 'none';
+                    } else {
+                        document.getElementById('listView').style.display = 'none';
+                        document.getElementById('chartView').style.display = 'block';
+                        updateMainChart();
+                    }
+                });
+            });
+
+            // Close panel
+            document.getElementById('closePanel').addEventListener('click', closeDetailPanel);
+            document.getElementById('overlay').addEventListener('click', closeDetailPanel);
+        }
+
+        function updateView() {
+            updateStats();
+            updateList();
+            updateBreadcrumb();
+            if (document.getElementById('chartView').style.display !== 'none') {
+                updateMainChart();
+            }
+            updateRegionChart();
+        }
+
+        function updateStats() {
+            let totalICBs = 0;
+            let totalTrusts = 0;
+            let totalHospitals = 0;
+            let regions = 0;
+
+            Object.entries(NHS_DATA.regions).forEach(([region, data]) => {
+                if (activeRegionFilter === 'all' || activeRegionFilter === region) {
+                    regions++;
+                    data.icbs.forEach(icb => {
+                        if (NHS_DATA.icbs[icb]) {
+                            totalICBs++;
+                            NHS_DATA.icbs[icb].trusts.forEach(trust => {
+                                if (activeTrustTypeFilter === 'all' || trust.type === activeTrustTypeFilter) {
+                                    totalTrusts++;
+                                    totalHospitals += trust.hospitals.length;
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+
+            document.getElementById('statsRow').innerHTML = `
+                <div class="stat-card">
+                    <h4>NHS Regions</h4>
+                    <div class="value">${regions}</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Integrated Care Boards</h4>
+                    <div class="value">${totalICBs}</div>
+                </div>
+                <div class="stat-card">
+                    <h4>NHS Trusts</h4>
+                    <div class="value">${totalTrusts}</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Hospital Sites</h4>
+                    <div class="value">${totalHospitals}</div>
+                </div>
+            `;
+        }
+
+        function updateList() {
+            const listView = document.getElementById('listView');
+            const listTitle = document.getElementById('listTitle');
+            let html = '';
+
+            if (selectedICB) {
+                // Show trusts in selected ICB
+                listTitle.textContent = 'NHS Trusts';
+                const icbData = NHS_DATA.icbs[selectedICB];
+
+                html += `<button class="back-btn" onclick="goBack()">← Back to ICBs</button>`;
+
+                if (icbData) {
+                    icbData.trusts
+                        .filter(trust => activeTrustTypeFilter === 'all' || trust.type === activeTrustTypeFilter)
+                        .filter(trust => !searchQuery || trust.name.toLowerCase().includes(searchQuery) ||
+                                trust.hospitals.some(h => h.toLowerCase().includes(searchQuery)))
+                        .forEach(trust => {
+                            const typeClass = trust.type.toLowerCase().replace(' ', '-');
+                            html += `
+                                <div class="list-item" onclick="showTrustDetail('${encodeURIComponent(JSON.stringify(trust))}', '${selectedICB}')">
+                                    <div class="icon type-${typeClass}">🏥</div>
+                                    <div class="details">
+                                        <div class="name">${trust.name}</div>
+                                        <div class="meta">${trust.type} • ${trust.hospitals.length} hospital${trust.hospitals.length !== 1 ? 's' : ''}</div>
+                                    </div>
+                                    <span class="count-badge">${trust.hospitals.length}</span>
+                                    <span class="arrow">→</span>
+                                </div>
+                            `;
+                        });
+                }
+            } else if (selectedRegion) {
+                // Show ICBs in selected region
+                listTitle.textContent = 'Integrated Care Boards';
+                const regionData = NHS_DATA.regions[selectedRegion];
+
+                html += `<button class="back-btn" onclick="goBack()">← Back to All Regions</button>`;
+
+                if (regionData) {
+                    regionData.icbs
+                        .filter(icb => !searchQuery || icb.toLowerCase().includes(searchQuery))
+                        .forEach(icb => {
+                            const icbData = NHS_DATA.icbs[icb];
+                            const trustCount = icbData ? icbData.trusts.filter(t => activeTrustTypeFilter === 'all' || t.type === activeTrustTypeFilter).length : 0;
+                            html += `
+                                <div class="list-item" onclick="selectICB('${icb}')">
+                                    <div class="icon" style="background: ${regionData.color}33">📋</div>
+                                    <div class="details">
+                                        <div class="name">${icb.replace('NHS ', '').replace(' ICB', '')}</div>
+                                        <div class="meta">${selectedRegion} Region</div>
+                                    </div>
+                                    <span class="count-badge">${trustCount} trusts</span>
+                                    <span class="arrow">→</span>
+                                </div>
+                            `;
+                        });
+                }
+            } else {
+                // Show all ICBs grouped by region
+                listTitle.textContent = 'Integrated Care Boards';
+
+                Object.entries(NHS_DATA.regions).forEach(([region, data]) => {
+                    if (activeRegionFilter === 'all' || activeRegionFilter === region) {
+                        data.icbs
+                            .filter(icb => !searchQuery || icb.toLowerCase().includes(searchQuery))
+                            .forEach(icb => {
+                                const icbData = NHS_DATA.icbs[icb];
+                                const trustCount = icbData ? icbData.trusts.filter(t => activeTrustTypeFilter === 'all' || t.type === activeTrustTypeFilter).length : 0;
+                                html += `
+                                    <div class="list-item" onclick="selectICB('${icb}')">
+                                        <div class="icon" style="background: ${data.color}33">📋</div>
+                                        <div class="details">
+                                            <div class="name">${icb.replace('NHS ', '').replace(' ICB', '')}</div>
+                                            <div class="meta">${region} Region • ${trustCount} trusts</div>
+                                        </div>
+                                        <span class="count-badge">${trustCount}</span>
+                                        <span class="arrow">→</span>
+                                    </div>
+                                `;
+                            });
+                    }
+                });
+            }
+
+            if (!html || html === `<button class="back-btn" onclick="goBack()">← Back to ICBs</button>` ||
+                html === `<button class="back-btn" onclick="goBack()">← Back to All Regions</button>`) {
+                html += `
+                    <div class="no-results">
+                        <div class="icon">🔍</div>
+                        <p>No results found</p>
+                    </div>
+                `;
+            }
+
+            listView.innerHTML = html;
+        }
+
+        function updateBreadcrumb() {
+            const breadcrumb = document.getElementById('breadcrumb');
+            let html = '<span onclick="resetView()">All Regions</span>';
+
+            if (selectedRegion) {
+                html += `<span class="separator">/</span><span onclick="selectRegion('${selectedRegion}')">${selectedRegion}</span>`;
+            }
+            if (selectedICB) {
+                const shortName = selectedICB.replace('NHS ', '').replace(' ICB', '');
+                html += `<span class="separator">/</span><span class="current">${shortName}</span>`;
+            } else if (selectedRegion) {
+                html = html.replace(`>${selectedRegion}<`, ` class="current">${selectedRegion}<`);
+            } else {
+                html = '<span class="current">All Regions</span>';
+            }
+
+            breadcrumb.innerHTML = html;
+        }
+
+        function selectRegion(region) {
+            selectedRegion = region;
+            selectedICB = null;
+            updateView();
+        }
+
+        function selectICB(icb) {
+            // Find the region for this ICB
+            for (const [region, data] of Object.entries(NHS_DATA.regions)) {
+                if (data.icbs.includes(icb)) {
+                    selectedRegion = region;
+                    break;
+                }
+            }
+            selectedICB = icb;
+            updateView();
+        }
+
+        function goBack() {
+            if (selectedICB) {
+                selectedICB = null;
+            } else if (selectedRegion) {
+                selectedRegion = null;
+            }
+            updateView();
+        }
+
+        function resetView() {
+            selectedRegion = null;
+            selectedICB = null;
+            updateView();
+        }
+
+        function showTrustDetail(trustJson, icbName) {
+            const trust = JSON.parse(decodeURIComponent(trustJson));
+            const detailContent = document.getElementById('detailContent');
+            const typeClass = trust.type.toLowerCase().replace(' ', '-');
+
+            let hospitalsHtml = '';
+            trust.hospitals.forEach(hospital => {
+                hospitalsHtml += `
+                    <div class="hospital-item">
+                        <div class="hospital-icon">🏥</div>
+                        <div class="hospital-info">
+                            <h4>${hospital}</h4>
+                            <p>Part of ${trust.name.split(' NHS')[0]}</p>
+                        </div>
+                    </div>
+                `;
+            });
+
+            detailContent.innerHTML = `
+                <div class="detail-header">
+                    <span class="type-badge type-${typeClass}">${trust.type}</span>
+                    <h2>${trust.name}</h2>
+                    <p class="subtitle">${icbName}</p>
+                </div>
+
+                <div class="detail-stats">
+                    <div class="detail-stat">
+                        <label>Hospital Sites</label>
+                        <div class="value">${trust.hospitals.length}</div>
+                    </div>
+                    <div class="detail-stat">
+                        <label>Trust Type</label>
+                        <div class="value" style="font-size: 1rem;">${trust.type}</div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <h3>Hospital Sites</h3>
+                    <div class="hospital-list">
+                        ${hospitalsHtml}
+                    </div>
+                </div>
+            `;
+
+            openDetailPanel();
+        }
+
+        function openDetailPanel() {
+            document.getElementById('detailPanel').classList.add('open');
+            document.getElementById('overlay').classList.add('visible');
+        }
+
+        function closeDetailPanel() {
+            document.getElementById('detailPanel').classList.remove('open');
+            document.getElementById('overlay').classList.remove('visible');
+        }
+
+        function initializeCharts() {
+            // Region pie chart
+            const regionCtx = document.getElementById('regionChart').getContext('2d');
+            regionChart = new Chart(regionCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: [],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#fff',
+                                padding: 15,
+                                font: { size: 11 }
+                            }
+                        }
+                    },
+                    onClick: (e, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const region = regionChart.data.labels[index];
+                            selectRegion(region);
+                        }
+                    }
+                }
+            });
+
+            updateRegionChart();
+        }
+
+        function updateRegionChart() {
+            const labels = [];
+            const data = [];
+            const colors = [];
+
+            Object.entries(NHS_DATA.regions).forEach(([region, regionData]) => {
+                let trustCount = 0;
+                regionData.icbs.forEach(icb => {
+                    if (NHS_DATA.icbs[icb]) {
+                        trustCount += NHS_DATA.icbs[icb].trusts.filter(t =>
+                            activeTrustTypeFilter === 'all' || t.type === activeTrustTypeFilter
+                        ).length;
+                    }
+                });
+
+                if (activeRegionFilter === 'all' || activeRegionFilter === region) {
+                    labels.push(region);
+                    data.push(trustCount);
+                    colors.push(regionData.color);
+                }
+            });
+
+            regionChart.data.labels = labels;
+            regionChart.data.datasets[0].data = data;
+            regionChart.data.datasets[0].backgroundColor = colors;
+            regionChart.update();
+        }
+
+        function updateMainChart() {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+
+            if (mainChart) {
+                mainChart.destroy();
+            }
+
+            const labels = [];
+            const data = [];
+            const colors = [];
+
+            if (selectedICB) {
+                // Show trusts in ICB
+                const icbData = NHS_DATA.icbs[selectedICB];
+                if (icbData) {
+                    icbData.trusts
+                        .filter(t => activeTrustTypeFilter === 'all' || t.type === activeTrustTypeFilter)
+                        .forEach(trust => {
+                            labels.push(trust.name.replace(' NHS Foundation Trust', '').replace(' NHS Trust', ''));
+                            data.push(trust.hospitals.length);
+                            const typeColors = {
+                                'Acute': '#E63946',
+                                'Mental Health': '#A855F7',
+                                'Community': '#2A9D8F',
+                                'Specialist': '#3B82F6',
+                                'Ambulance': '#FBB724'
+                            };
+                            colors.push(typeColors[trust.type] || '#888');
+                        });
+                }
+            } else {
+                // Show ICBs
+                Object.entries(NHS_DATA.regions).forEach(([region, regionData]) => {
+                    if (activeRegionFilter === 'all' || activeRegionFilter === region) {
+                        regionData.icbs.forEach(icb => {
+                            const icbData = NHS_DATA.icbs[icb];
+                            if (icbData) {
+                                const trustCount = icbData.trusts.filter(t =>
+                                    activeTrustTypeFilter === 'all' || t.type === activeTrustTypeFilter
+                                ).length;
+                                labels.push(icb.replace('NHS ', '').replace(' ICB', ''));
+                                data.push(trustCount);
+                                colors.push(regionData.color);
+                            }
+                        });
+                    }
+                });
+            }
+
+            mainChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: selectedICB ? 'Hospitals' : 'Trusts',
+                        data: data,
+                        backgroundColor: colors,
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            ticks: { color: '#fff' }
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: {
+                                color: '#fff',
+                                font: { size: 10 }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
