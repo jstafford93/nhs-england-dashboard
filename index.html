@@ -604,6 +604,210 @@
             font-size: 48px;
             margin-bottom: 15px;
         }
+
+        /* SPoA/Advice & Refer Section Styles */
+        .spoa-section {
+            margin-top: 25px;
+        }
+
+        .spoa-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .spoa-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .spoa-card h3 {
+            font-size: 1rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .spoa-card .badge {
+            background: rgba(16, 185, 129, 0.3);
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: normal;
+        }
+
+        .ar-trust-item {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid #10B981;
+        }
+
+        .ar-trust-item h4 {
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .ar-trust-item .meta {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 10px;
+        }
+
+        .ar-specialties {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .ar-specialty-tag {
+            background: rgba(16, 185, 129, 0.2);
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            color: #10B981;
+        }
+
+        .ar-outcomes {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .ar-outcome {
+            background: rgba(59, 130, 246, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .ar-outcome .value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #3B82F6;
+        }
+
+        .ar-outcome .label {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 3px;
+        }
+
+        .spoa-type-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            border-left: 4px solid #A855F7;
+        }
+
+        .spoa-type-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-size: 18px;
+            background: rgba(168, 85, 247, 0.2);
+        }
+
+        .spoa-type-info {
+            flex: 1;
+        }
+
+        .spoa-type-info h4 {
+            font-size: 14px;
+            margin-bottom: 3px;
+        }
+
+        .spoa-type-info p {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .spoa-count-badge {
+            background: rgba(168, 85, 247, 0.3);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .comparison-chart {
+            height: 200px;
+            margin-top: 15px;
+        }
+
+        .source-link {
+            display: inline-block;
+            margin-top: 10px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+            text-decoration: none;
+        }
+
+        .source-link:hover {
+            color: #3B82F6;
+        }
+
+        .section-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            margin: 30px 0;
+        }
+
+        .full-width-card {
+            grid-column: 1 / -1;
+        }
+
+        .timeline-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 15px 0;
+            border-left: 2px solid rgba(16, 185, 129, 0.3);
+            margin-left: 10px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -6px;
+            top: 20px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #10B981;
+        }
+
+        .timeline-date {
+            min-width: 80px;
+            font-size: 12px;
+            color: #10B981;
+            font-weight: 600;
+        }
+
+        .timeline-content h4 {
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .timeline-content p {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
     </style>
 </head>
 <body>
@@ -669,6 +873,75 @@
                     </div>
                     <div class="chart-container">
                         <canvas id="regionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SPoA / Advice & Refer Section -->
+            <div class="section-divider"></div>
+            <div class="spoa-section">
+                <div class="card-header">
+                    <h2>Single Point of Access (SPoA) & Advice and Refer</h2>
+                </div>
+
+                <div class="spoa-grid">
+                    <!-- A&R Model Comparison -->
+                    <div class="spoa-card">
+                        <h3>Advice & Refer Model <span class="badge">Enhanced Pathway</span></h3>
+                        <p style="font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 15px;">
+                            A&R expands consultant response options from 3 to 5, enabling better triage at referral.
+                        </p>
+                        <div class="comparison-chart">
+                            <canvas id="arComparisonChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- A&R Implementations -->
+                    <div class="spoa-card">
+                        <h3>Trusts Using Advice & Refer</h3>
+                        <div id="arTrustsList">
+                            <!-- Generated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- SPoA Types -->
+                    <div class="spoa-card">
+                        <h3>SPoA Implementation Types</h3>
+                        <div id="spoaTypesList">
+                            <!-- Generated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- A&R Outcomes -->
+                    <div class="spoa-card">
+                        <h3>A&R Pilot Outcomes <span class="badge">Hull University Trust</span></h3>
+                        <div class="ar-outcomes">
+                            <div class="ar-outcome">
+                                <div class="value">70%</div>
+                                <div class="label">Cardiology Outpatient Avoidance</div>
+                            </div>
+                            <div class="ar-outcome">
+                                <div class="value">51%</div>
+                                <div class="label">Diagnostics Ordered at Triage</div>
+                            </div>
+                            <div class="ar-outcome">
+                                <div class="value">50%</div>
+                                <div class="label">Neurology Pathway Shortened</div>
+                            </div>
+                            <div class="ar-outcome">
+                                <div class="value">50%</div>
+                                <div class="label">Gastro Pathway Shortened</div>
+                            </div>
+                        </div>
+                        <a href="https://www.hey.nhs.uk/news/2025/04/17/pilot-is-a-game-changer-in-cardiology/" target="_blank" class="source-link">Source: Hull University Teaching Hospitals NHS Trust</a>
+                    </div>
+
+                    <!-- Implementation Timeline -->
+                    <div class="spoa-card full-width-card">
+                        <h3>A&R Implementation Timeline</h3>
+                        <div id="arTimeline">
+                            <!-- Generated dynamically -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1070,6 +1343,68 @@
                     ]
                 }
             }
+        };
+
+        // Advice & Refer Data - Trusts using A&R model via NHS e-RS
+        const ADVICE_AND_REFER_DATA = {
+            trusts: [
+                {
+                    name: "Barts Health NHS Trust",
+                    region: "London",
+                    icb: "NHS North East London ICB",
+                    implementationDate: "October 2021",
+                    specialties: ["Cardiac Arrhythmia", "Cardiac Surgery", "Cardiology", "Clinical Genetics", "Clinical Haematology",
+                                  "Dermatology", "Diabetic Medicine", "ENT", "Endocrinology", "Gastroenterology", "General Medicine",
+                                  "General Surgery", "Geriatric Medicine", "Gynaecology", "Hepatology", "Interventional Radiology",
+                                  "Nephrology", "Neurology", "Neurosurgery", "Ophthalmology", "Pain Management", "Respiratory Medicine",
+                                  "Rheumatology", "Thoracic Surgery", "Urology", "Vascular Surgery"],
+                    source: "https://www.bartshealth.nhs.uk/referrals/",
+                    pioneer: true
+                },
+                {
+                    name: "Hull University Teaching Hospitals NHS Trust",
+                    region: "North East and Yorkshire",
+                    icb: "NHS Humber and North Yorkshire ICB",
+                    implementationDate: "2024 (Pilot)",
+                    specialties: ["Cardiology", "Neurology", "Gastroenterology"],
+                    outcomes: {
+                        cardiology: { outpatientAvoidance: 70, diagnosticsAtTriage: 51 },
+                        neurology: { pathwayShortened: 50 },
+                        gastroenterology: { pathwayShortened: 50 }
+                    },
+                    source: "https://www.hey.nhs.uk/news/2025/04/17/pilot-is-a-game-changer-in-cardiology/"
+                },
+                {
+                    name: "University Hospitals Birmingham NHS Foundation Trust",
+                    region: "Midlands",
+                    icb: "NHS Birmingham and Solihull ICB",
+                    implementationDate: "July 2022",
+                    specialties: ["Dermatology", "Neurology", "Rheumatology"],
+                    source: "UHB GP Referrals Website"
+                },
+                {
+                    name: "Homerton Healthcare NHS Foundation Trust",
+                    region: "London",
+                    icb: "NHS North East London ICB",
+                    implementationDate: "2023-2024",
+                    specialties: ["Allergy", "Paediatric Allergy", "Rheumatology"],
+                    source: "https://www.homerton.nhs.uk/gps-and-primary-care/"
+                },
+                {
+                    name: "Royal Devon University Healthcare NHS Foundation Trust",
+                    region: "South West",
+                    icb: "NHS Devon ICB",
+                    implementationDate: "2023",
+                    specialties: ["Teledermatology"],
+                    source: "Devon Formulary Guidance"
+                }
+            ],
+            spoaTypes: [
+                { name: "Mental Health SPoA", icon: "🧠", description: "Centralized mental health referral triage", count: 42 },
+                { name: "MSK SPoA", icon: "🦴", description: "Musculoskeletal pathway management", count: 35 },
+                { name: "Ophthalmology SPoA", icon: "👁️", description: "Eye services referral management", count: 28 },
+                { name: "Urgent Care SPoA", icon: "🚑", description: "Urgent community response coordination", count: 24 }
+            ]
         };
 
         // State
@@ -1483,6 +1818,119 @@
             });
 
             updateRegionChart();
+
+            // Initialize A&R section
+            initializeARSection();
+        }
+
+        function initializeARSection() {
+            // A&R Comparison Chart - Traditional vs A&R model
+            const arCtx = document.getElementById('arComparisonChart').getContext('2d');
+            new Chart(arCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Traditional A&G', 'Advice & Refer'],
+                    datasets: [{
+                        label: 'Response Options',
+                        data: [3, 5],
+                        backgroundColor: ['rgba(255, 99, 132, 0.6)', 'rgba(16, 185, 129, 0.6)'],
+                        borderColor: ['rgba(255, 99, 132, 1)', 'rgba(16, 185, 129, 1)'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                afterLabel: function(context) {
+                                    if (context.dataIndex === 0) {
+                                        return 'Options: Reject, Advise GP, Book Outpatient';
+                                    } else {
+                                        return 'Options: Reject, Advise GP, Management Plan,\nOrder Diagnostics, Book Outpatient';
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            ticks: { color: '#fff' },
+                            max: 6
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: { color: '#fff' }
+                        }
+                    }
+                }
+            });
+
+            // Render A&R Trusts List
+            const arTrustsList = document.getElementById('arTrustsList');
+            let trustsHtml = '';
+            ADVICE_AND_REFER_DATA.trusts.forEach(trust => {
+                const specialtiesHtml = trust.specialties.slice(0, 5).map(s =>
+                    `<span class="ar-specialty-tag">${s}</span>`
+                ).join('');
+                const moreCount = trust.specialties.length > 5 ? `<span class="ar-specialty-tag">+${trust.specialties.length - 5} more</span>` : '';
+
+                trustsHtml += `
+                    <div class="ar-trust-item">
+                        <h4>${trust.name}${trust.pioneer ? ' <span style="color: #10B981; font-size: 11px;">(Pioneer)</span>' : ''}</h4>
+                        <div class="meta">${trust.icb} • ${trust.implementationDate}</div>
+                        <div class="ar-specialties">
+                            ${specialtiesHtml}${moreCount}
+                        </div>
+                    </div>
+                `;
+            });
+            arTrustsList.innerHTML = trustsHtml;
+
+            // Render SPoA Types List
+            const spoaTypesList = document.getElementById('spoaTypesList');
+            let spoaHtml = '';
+            ADVICE_AND_REFER_DATA.spoaTypes.forEach(type => {
+                spoaHtml += `
+                    <div class="spoa-type-item">
+                        <div class="spoa-type-icon">${type.icon}</div>
+                        <div class="spoa-type-info">
+                            <h4>${type.name}</h4>
+                            <p>${type.description}</p>
+                        </div>
+                        <span class="spoa-count-badge">${type.count} ICBs</span>
+                    </div>
+                `;
+            });
+            spoaTypesList.innerHTML = spoaHtml;
+
+            // Render Timeline
+            const arTimeline = document.getElementById('arTimeline');
+            const timelineData = [
+                { date: 'Oct 2021', title: 'Barts Health NHS Trust', desc: 'Pioneer implementation with 26 specialties via NHS e-RS' },
+                { date: '2022', title: 'UHB & Homerton', desc: 'University Hospitals Birmingham and Homerton Healthcare adopt A&R' },
+                { date: '2023', title: 'Royal Devon', desc: 'Teledermatology A&R pathway implementation' },
+                { date: '2024', title: 'Hull Pilot', desc: 'Hull University Trust pilot shows 70% cardiology outpatient avoidance' },
+                { date: '2025', title: 'National Expansion', desc: 'NHS England promoting A&R as enhanced referral model' }
+            ];
+
+            let timelineHtml = '';
+            timelineData.forEach(item => {
+                timelineHtml += `
+                    <div class="timeline-item">
+                        <div class="timeline-date">${item.date}</div>
+                        <div class="timeline-content">
+                            <h4>${item.title}</h4>
+                            <p>${item.desc}</p>
+                        </div>
+                    </div>
+                `;
+            });
+            arTimeline.innerHTML = timelineHtml;
         }
 
         function updateRegionChart() {
